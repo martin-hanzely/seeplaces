@@ -1,5 +1,4 @@
 import os
-from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urljoin
 
@@ -24,9 +23,9 @@ class ApiConnectionError(SeePlacesError):
     """
 
 
-class SeePlacesOptions:
+class _SeePlacesOptions:
     """
-    Options class for SeePlaces service.
+    Internal options class for SeePlaces service.
     """
     base_url: str
     api_version: str
@@ -39,27 +38,27 @@ class SeePlacesOptions:
             raise ConfigurationError(f"Missing configuration key: {exc}") from exc
 
 
+class _SpokenLanguage:
+    """
+    Internal class for handling spoken languages.
+    """
+    id: str
+    name: str
+    url_name: str
+
+    def __init__(self, Id: str, Name: str, UrlName: str) -> None:  # pylint: disable=C0103
+        self.id = Id
+        self.name = Name
+        self.url_name = UrlName
+
+
 class SeePlacesService:
     """
     Connection service for SeePlaces API.
     """
-    _options: SeePlacesOptions
+    _options: _SeePlacesOptions
 
-    @dataclass
-    class _SpokenLanguage:
-        """
-        Internal class for handling spoken languages.
-        """
-        id: str
-        name: str
-        url_name: str
-
-        def __init__(self, Id: str, Name: str, UrlName: str) -> None:  # pylint: disable=C0103
-            self.id = Id
-            self.name = Name
-            self.url_name = UrlName
-
-    def __init__(self, options: SeePlacesOptions) -> None:
+    def __init__(self, options: _SeePlacesOptions) -> None:
         self._options = options
 
     def _get_language_ids(self, languages: set[str]) -> set[str]:
@@ -101,5 +100,5 @@ class SeePlacesService:
         languages = []
         if languages_from_response := json_data.get("SpokenLanguages"):
             for _l in languages_from_response:
-                languages.append(SeePlacesService._SpokenLanguage(**_l))
+                languages.append(_SpokenLanguage(**_l))
         return languages

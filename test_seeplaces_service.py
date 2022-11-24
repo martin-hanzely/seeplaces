@@ -7,15 +7,19 @@ import requests
 
 from seeplaces_service import (
     ConfigurationError,
-    SeePlacesOptions,
+    _SeePlacesOptions,
+    _SpokenLanguage,
     SeePlacesService,
 )
 
 
-@pytest.fixture
+_test_base_url = "https://www.example.com/"
+
+
+@pytest.fixture(autouse=True)
 def setup_env() -> Iterator[None]:
     required_env = {
-        "BASE_URL": "https://api.example.com/",  # Must end with trailing slash.
+        "BASE_URL": _test_base_url,  # Must end with trailing slash.
         "API_VERSION": "1.0",
     }
     with mock.patch.dict(os.environ, required_env):
@@ -25,11 +29,8 @@ def setup_env() -> Iterator[None]:
 class TestSeePlacesOptions:
 
     def test_init(self):
-        base_url = "https://www.example.com"
-        with mock.patch.dict(os.environ, {"BASE_URL": base_url}):
-            options = SeePlacesOptions()
-        
-        assert options.base_url == base_url
+        options = _SeePlacesOptions()        
+        assert options.base_url == _test_base_url
 
     def test_init_fails(self):
         missing_env = "BASE_URL"
@@ -37,26 +38,26 @@ class TestSeePlacesOptions:
         _ = dict.pop(_env, missing_env)
         with mock.patch.dict(os.environ, _env, clear=True):
             with pytest.raises(ConfigurationError) as exc:
-                _ = SeePlacesOptions()
+                _ = _SeePlacesOptions()
                 assert missing_env in str(exc)
 
 
 class TestSeePlacesService:
 
     @pytest.fixture
-    def dummy_service(setup_env) -> SeePlacesService:
-        options = SeePlacesOptions()
+    def service(self) -> SeePlacesService:
+        options = _SeePlacesOptions()
         return SeePlacesService(options=options)
 
-    def test__get_language_ids(self, monkeypatch, dummy_service):
+    def test__get_language_ids(self, monkeypatch, service):
         test_id = "test_id"
         languages = [
-            SeePlacesService._SpokenLanguage(test_id, "Slovak", "slovak"),
-            SeePlacesService._SpokenLanguage("test_id1", "Czech", "czech")
+            _SpokenLanguage(test_id, "Slovak", "slovak"),
+            _SpokenLanguage("test_id1", "Czech", "czech")
         ]
-        monkeypatch.setattr(dummy_service, "_call_excursion_spoken_languages", lambda: None)
-        monkeypatch.setattr(dummy_service, "_parse_languages_from_response", lambda _: languages)
-        language_ids = dummy_service._get_language_ids({"Slovak"})
+        monkeypatch.setattr(service, "_call_excursion_spoken_languages", lambda: None)
+        monkeypatch.setattr(service, "_parse_languages_from_response", lambda _: languages)
+        language_ids = service._get_language_ids({"Slovak"})
         assert len(language_ids) == 1
         assert language_ids.pop() == test_id
 
@@ -67,11 +68,11 @@ class TestSeePlacesService:
             pytest.param(404, marks=pytest.mark.xfail, id="status_not_found"),
         ]
     )
-    def test__call_excursion_spoken_languages(self, monkeypatch, dummy_service, status_code):
+    def test__call_excursion_spoken_languages(self, monkeypatch, service, status_code):
         response = requests.Response()
         response.status_code = status_code
         monkeypatch.setattr(requests, "get", lambda *args, **kwargs: response)
-        _ = dummy_service._call_excursion_spoken_languages()
+        _ = service._call_excursion_spoken_languages()
 
     @pytest.mark.parametrize(
         "json_data, expected_output",
@@ -83,19 +84,19 @@ class TestSeePlacesService:
             ),
             pytest.param(
                 {"SpokenLanguages": [{"Id": "test_id", "Name": "Slovak", "UrlName": "slovak"}]},
-                [SeePlacesService._SpokenLanguage("test_id", "Slovak", "slovak")],
+                [_SpokenLanguage("test_id", "Slovak", "slovak")],
                 id="response_from_api_docs",
             ),
         ]
     )
-    def test__parse_languages_from_response(self, dummy_service, json_data, expected_output):
+    def test__parse_languages_from_response(self, service, json_data, expected_output):
 
         class _MockResponse:
 
             def json(self):
                 return json_data
 
-        languages = dummy_service._parse_languages_from_response(response=_MockResponse())
+        languages = service._parse_languages_from_response(response=_MockResponse())
         assert len(languages) == len(expected_output)
         if len(languages) > 0:
             assert languages[0].id == expected_output[0].id
