@@ -15,7 +15,7 @@ from seeplaces_service import (
 @pytest.fixture
 def setup_env() -> Iterator[None]:
     required_env = {
-        "BASE_URL": "https://api.example.com",  # Must end with trailing slash.
+        "BASE_URL": "https://api.example.com/",  # Must end with trailing slash.
         "API_VERSION": "1.0",
     }
     with mock.patch.dict(os.environ, required_env):
