@@ -5,6 +5,10 @@ from urllib.parse import urljoin
 import requests
 
 
+_mapping = dict[str, Any]
+"""Type alias for mappings, eg. query and headers."""
+
+
 class SeePlacesError(Exception):
     """
     Generic SeePlaces service exception.
@@ -69,28 +73,6 @@ class SeePlacesService:
         all_languages = self._parse_languages_from_response(api_response)
         return {_l.id for _l in all_languages if _l.name in languages}
 
-
-    def _call_excursion_spoken_languages(self) -> requests.Response:
-        """
-        Returns response of ExcursionSpokenLanguages api call.
-        """
-        base_url = self._options.base_url
-        endpoint_path = "api/Excursion/ExcursionSpokenLanguages"
-        query = {"api-version": self._options.api_version}
-        headers = {"accept": "application/json"}
-
-        response = requests.get(
-            urljoin(base_url, endpoint_path),
-            params=query,
-            headers=headers,
-            timeout=60,
-        )
-        try:
-            response.raise_for_status()  # Raise exception if response status is not OK.
-        except requests.HTTPError as exc:
-            raise ApiConnectionError(f"Cannot connect to endpoint: {endpoint_path}") from exc
-        return response
-
     def _parse_languages_from_response(self, response: requests.Response) -> list[_SpokenLanguage]:
         """
         Returns api call response parsed into list of _SpokenLanguage objects.
@@ -102,3 +84,34 @@ class SeePlacesService:
             for _l in languages_from_response:
                 languages.append(_SpokenLanguage(**_l))
         return languages
+
+    def _call_api(self, endpoint: str, query: _mapping, headers: _mapping) -> requests.Response:
+        """
+        Generic api call with provided parameters.
+        """
+        base_url = self._options.base_url
+        response = requests.get(
+            urljoin(base_url, endpoint),
+            params=query,
+            headers={"accept": "application/json"} | headers,  # Override defaults with parameter.
+            timeout=60,
+        )
+        try:
+            response.raise_for_status()  # Raise exception if response status is not OK.
+        except requests.HTTPError as exc:
+            raise ApiConnectionError(f"Cannot connect to endpoint: {endpoint}") from exc
+        return response
+
+    def _call_excursion_spoken_languages(self) -> requests.Response:
+        """
+        Returns response of ExcursionSpokenLanguages api call.
+        """
+        endpoint_path = "api/Excursion/ExcursionSpokenLanguages"
+        query = {"api-version": self._options.api_version}
+        return self._call_api(endpoint=endpoint_path, query=query, headers={})
+
+    def _call_excursion_for_iata_code(self) -> requests.Response:
+        """
+        Returns response of ExcursionForIataCode api call.
+        """
+        raise NotImplementedError

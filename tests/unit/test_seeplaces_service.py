@@ -65,19 +65,6 @@ class TestSeePlacesService:
         assert language_ids.pop() == test_id
 
     @pytest.mark.parametrize(
-        "status_code",
-        [
-            pytest.param(200, id="status_ok"),
-            pytest.param(404, marks=pytest.mark.xfail, id="status_not_found"),
-        ]
-    )
-    def test__call_excursion_spoken_languages(self, monkeypatch, service, status_code):
-        response = requests.Response()
-        response.status_code = status_code
-        monkeypatch.setattr(requests, "get", lambda *args, **kwargs: response)
-        _ = service._call_excursion_spoken_languages()
-
-    @pytest.mark.parametrize(
         "json_data, expected_output",
         [
             pytest.param(
@@ -103,3 +90,16 @@ class TestSeePlacesService:
         assert len(languages) == len(expected_output)
         if len(languages) > 0:
             assert languages[0].id == expected_output[0].id
+
+    @pytest.mark.parametrize(
+        "status_code",
+        [
+            pytest.param(200, id="status_ok"),
+            pytest.param(404, marks=pytest.mark.xfail, id="status_not_found"),
+        ]
+    )
+    def test__call_api(self, monkeypatch, service, status_code):
+        response = requests.Response()
+        response.status_code = status_code
+        monkeypatch.setattr(requests, "get", lambda *args, **kwargs: response)
+        _ = service._call_api(endpoint="", query={}, headers={})
