@@ -48,7 +48,7 @@ class TestSeePlacesOptions:
 class TestSeePlacesService:
 
     @pytest.fixture
-    def service(self) -> SeePlacesService:
+    def service(self, setup_env) -> SeePlacesService:
         options = SeePlacesOptions()
         return SeePlacesService(options=options)
 
