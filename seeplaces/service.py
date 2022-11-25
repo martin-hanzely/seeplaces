@@ -4,27 +4,11 @@ from urllib.parse import urljoin
 
 import requests
 
+from seeplaces.exceptions import ConfigurationError, ApiConnectionError
+
 
 _mapping = dict[str, Any]
 """Type alias for mappings, eg. query and headers."""
-
-
-class SeePlacesError(Exception):
-    """
-    Generic SeePlaces service exception.
-    """
-
-
-class ConfigurationError(SeePlacesError):
-    """
-    Service configuration error.
-    """
-
-
-class ApiConnectionError(SeePlacesError):
-    """
-    Service connection error.
-    """
 
 
 class SeePlacesOptions:

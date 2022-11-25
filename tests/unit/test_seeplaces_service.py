@@ -5,12 +5,8 @@ from unittest import mock
 import pytest
 import requests
 
-from seeplaces_service import (
-    ConfigurationError,
-    SeePlacesOptions,
-    _SpokenLanguage,
-    SeePlacesService,
-)
+from seeplaces.exceptions import ConfigurationError
+from seeplaces.service import SeePlacesOptions, _SpokenLanguage, SeePlacesService
 
 
 _test_base_url = "https://www.example.com/"

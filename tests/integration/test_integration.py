@@ -1,4 +1,4 @@
-from seeplaces_service import SeePlacesOptions, SeePlacesService
+from seeplaces.service import SeePlacesOptions, SeePlacesService
 
 
 class TestIntegration:
