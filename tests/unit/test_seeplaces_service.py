@@ -7,7 +7,7 @@ import requests
 
 from seeplaces_service import (
     ConfigurationError,
-    _SeePlacesOptions,
+    SeePlacesOptions,
     _SpokenLanguage,
     SeePlacesService,
 )
@@ -18,6 +18,9 @@ _test_base_url = "https://www.example.com/"
 
 @pytest.fixture(autouse=True)
 def setup_env() -> Iterator[None]:
+    """
+    Dummy testing environment.
+    """
     required_env = {
         "BASE_URL": _test_base_url,  # Must end with trailing slash.
         "API_VERSION": "1.0",
@@ -29,7 +32,7 @@ def setup_env() -> Iterator[None]:
 class TestSeePlacesOptions:
 
     def test_init(self):
-        options = _SeePlacesOptions()        
+        options = SeePlacesOptions()        
         assert options.base_url == _test_base_url
 
     def test_init_fails(self):
@@ -38,7 +41,7 @@ class TestSeePlacesOptions:
         _ = dict.pop(_env, missing_env)
         with mock.patch.dict(os.environ, _env, clear=True):
             with pytest.raises(ConfigurationError) as exc:
-                _ = _SeePlacesOptions()
+                _ = SeePlacesOptions()
                 assert missing_env in str(exc)
 
 
@@ -46,7 +49,7 @@ class TestSeePlacesService:
 
     @pytest.fixture
     def service(self) -> SeePlacesService:
-        options = _SeePlacesOptions()
+        options = SeePlacesOptions()
         return SeePlacesService(options=options)
 
     def test__get_language_ids(self, monkeypatch, service):

@@ -23,7 +23,7 @@ class ApiConnectionError(SeePlacesError):
     """
 
 
-class _SeePlacesOptions:
+class SeePlacesOptions:
     """
     Internal options class for SeePlaces service.
     """
@@ -56,9 +56,9 @@ class SeePlacesService:
     """
     Connection service for SeePlaces API.
     """
-    _options: _SeePlacesOptions
+    _options: SeePlacesOptions
 
-    def __init__(self, options: _SeePlacesOptions) -> None:
+    def __init__(self, options: SeePlacesOptions) -> None:
         self._options = options
 
     def _get_language_ids(self, languages: set[str]) -> set[str]:
