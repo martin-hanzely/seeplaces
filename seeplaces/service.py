@@ -1,3 +1,4 @@
+import datetime
 import os
 from typing import Any
 from urllib.parse import urljoin
@@ -17,11 +18,13 @@ class SeePlacesOptions:
     """
     base_url: str
     api_version: str
+    scope_id: str
 
     def __init__(self) -> None:
         try:
             self.base_url = os.environ["BASE_URL"]
             self.api_version = os.environ["API_VERSION"]
+            self.scope_id = os.environ["SCOPE_ID"]
         except KeyError as exc:
             raise ConfigurationError(f"Missing configuration key: {exc}") from exc
 
@@ -71,13 +74,13 @@ class SeePlacesService:
 
     def _call_api(self, endpoint: str, query: _mapping, headers: _mapping) -> requests.Response:
         """
-        Generic api call with provided parameters.
+        Generic api call with provided parameters. Parameters override query and header defaults.
         """
         base_url = self._options.base_url
         response = requests.get(
             urljoin(base_url, endpoint),
-            params=query,
-            headers={"accept": "application/json"} | headers,  # Override defaults with parameter.
+            params={"api-version": self._options.api_version} | query,
+            headers={"accept": "application/json"} | headers,
             timeout=60,
         )
         try:
@@ -91,11 +94,30 @@ class SeePlacesService:
         Returns response of ExcursionSpokenLanguages api call.
         """
         endpoint_path = "api/Excursion/ExcursionSpokenLanguages"
-        query = {"api-version": self._options.api_version}
-        return self._call_api(endpoint=endpoint_path, query=query, headers={})
+        # English is accepted here. Customers do not see the response.
+        headers = {"accept-language": "en-US"}
+        return self._call_api(endpoint=endpoint_path, query={}, headers=headers)
 
-    def _call_excursion_for_iata_code(self) -> requests.Response:
+    def _call_excursion_for_iata_code(
+            self,
+            iata_code: str,
+            date_from: datetime.date,
+            date_to: datetime.date,
+            language_ids: set[str],
+    ) -> requests.Response:
         """
         Returns response of ExcursionForIataCode api call.
         """
-        raise NotImplementedError
+        endpoint_path = "api/Excursion/ExcursionForIataCode"
+        query = {
+            "input.iataCodes": iata_code,
+            "input.dateFrom": date_from.isoformat(),
+            "input.dateTo": date_to.isoformat(),
+            "input.spokenLanguages": language_ids,
+        }
+        headers = {
+            "x-scope-id": self._options.scope_id,
+            "currency": "EUR",
+            "accept-language": "sk-SK",  # Slovak is needed for customers.
+        }
+        return self._call_api(endpoint=endpoint_path, query=query, headers=headers)

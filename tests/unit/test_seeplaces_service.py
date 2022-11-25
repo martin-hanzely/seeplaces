@@ -20,6 +20,7 @@ def setup_env() -> Iterator[None]:
     required_env = {
         "BASE_URL": _test_base_url,  # Must end with trailing slash.
         "API_VERSION": "1.0",
+        "SCOPE_ID": "123456",
     }
     with mock.patch.dict(os.environ, required_env):
         yield
