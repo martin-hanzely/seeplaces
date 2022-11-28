@@ -52,8 +52,8 @@ class TestSeePlacesService:
     def test__get_language_ids(self, monkeypatch, service):
         test_id = "test_id"
         languages = [
-            _SpokenLanguage(test_id, "Slovak", "slovak"),
-            _SpokenLanguage("test_id1", "Czech", "czech")
+            _SpokenLanguage(Id=test_id, Name="Slovak"),
+            _SpokenLanguage(Id="test_id1", Name="Czech")
         ]
         monkeypatch.setattr(service, "_call_excursion_spoken_languages", lambda: None)
         monkeypatch.setattr(service, "_parse_languages_from_response", lambda _: languages)
@@ -71,7 +71,7 @@ class TestSeePlacesService:
             ),
             pytest.param(
                 {"SpokenLanguages": [{"Id": "test_id", "Name": "Slovak", "UrlName": "slovak"}]},
-                [_SpokenLanguage("test_id", "Slovak", "slovak")],
+                [_SpokenLanguage(Id="test_id", Name="Slovak")],
                 id="response_from_api_docs",
             ),
         ]

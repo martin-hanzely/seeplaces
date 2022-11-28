@@ -19,7 +19,6 @@ class TestIntegration:
         for _l in all_languages:
             assert isinstance(_l.id, str)
             assert isinstance(_l.name, str)
-            assert isinstance(_l.url_name, str)
             if _l.name == "Slovak":
                 found_slovak = True
         assert found_slovak, "Slovak language not found."

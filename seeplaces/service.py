@@ -35,12 +35,11 @@ class _SpokenLanguage:
     """
     id: str
     name: str
-    url_name: str
 
-    def __init__(self, Id: str, Name: str, UrlName: str) -> None:  # pylint: disable=C0103
+    # Require positional arguments. Discard unused input.
+    def __init__(self, *, Id: str, Name: str, **_) -> None:  # pylint: disable=C0103
         self.id = Id
         self.name = Name
-        self.url_name = UrlName
 
 
 class SeePlacesService:
