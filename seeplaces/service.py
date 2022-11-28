@@ -29,7 +29,7 @@ class _SpokenLanguage:
     id: str
     name: str
 
-    # Require positional arguments. Discard unused input.
+    # Require keyword arguments. Discard unused input.
     def __init__(self, *, Id: str, Name: str, **_) -> None:  # pylint: disable=C0103
         self.id = Id
         self.name = Name
