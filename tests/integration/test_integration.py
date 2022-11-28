@@ -5,11 +5,10 @@ from seeplaces.service import SeePlacesOptions, SeePlacesService
 
 class TestIntegration:
 
-    def test__excursion_spoken_languages(self):
+    def test__excursion_spoken_languages(self, options):
         """
         Check if ExcursionSpokenLanguages api response has expected format.
         """
-        options = SeePlacesOptions()
         service = SeePlacesService(options=options)
         api_response = service._call_excursion_spoken_languages()
         all_languages = service._parse_languages_from_response(api_response)
@@ -23,11 +22,10 @@ class TestIntegration:
                 found_slovak = True
         assert found_slovak, "Slovak language not found."
 
-    def test__call_excursion_for_iata_code(self):
+    def test__call_excursion_for_iata_code(self, options):
         """
         Check if ExcursionForIataCode api response has expected format.
         """
-        options = SeePlacesOptions()
         service = SeePlacesService(options=options)
 
         language_ids = service._get_language_ids({"Slovak"})

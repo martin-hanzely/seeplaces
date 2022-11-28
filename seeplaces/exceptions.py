@@ -4,12 +4,6 @@ class SeePlacesError(Exception):
     """
 
 
-class ConfigurationError(SeePlacesError):
-    """
-    Service configuration error.
-    """
-
-
 class ApiConnectionError(SeePlacesError):
     """
     Service connection error.

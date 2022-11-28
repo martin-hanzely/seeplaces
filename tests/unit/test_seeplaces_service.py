@@ -5,18 +5,18 @@ from unittest import mock
 import pytest
 import requests
 
-from seeplaces.exceptions import ConfigurationError
-from seeplaces.service import SeePlacesOptions, _SpokenLanguage, SeePlacesService
+from seeplaces.service import _SpokenLanguage, SeePlacesService
 
 
 _test_base_url = "https://www.example.com/"
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def setup_env() -> Iterator[None]:
     """
     Dummy testing environment.
     """
+    # Only use in unit tests. Integration needs real values.
     required_env = {
         "BASE_URL": _test_base_url,  # Must end with trailing slash.
         "API_VERSION": "1.0",
@@ -26,27 +26,10 @@ def setup_env() -> Iterator[None]:
         yield
 
 
-class TestSeePlacesOptions:
-
-    def test_init(self):
-        options = SeePlacesOptions()        
-        assert options.base_url == _test_base_url
-
-    def test_init_fails(self):
-        missing_env = "BASE_URL"
-        _env = {k: v for k, v in os.environ.items()}
-        _ = dict.pop(_env, missing_env)
-        with mock.patch.dict(os.environ, _env, clear=True):
-            with pytest.raises(ConfigurationError) as exc:
-                _ = SeePlacesOptions()
-                assert missing_env in str(exc)
-
-
 class TestSeePlacesService:
 
     @pytest.fixture
-    def service(self, setup_env) -> SeePlacesService:
-        options = SeePlacesOptions()
+    def service(self, setup_env, options) -> SeePlacesService:
         return SeePlacesService(options=options)
 
     def test__get_language_ids(self, monkeypatch, service):

@@ -1,17 +1,18 @@
 import datetime
-import os
+from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urljoin
 
 import requests
 
-from seeplaces.exceptions import ConfigurationError, ApiConnectionError
+from seeplaces.exceptions import ApiConnectionError
 
 
 _mapping = dict[str, Any]
 """Type alias for mappings, eg. query and headers."""
 
 
+@dataclass
 class SeePlacesOptions:
     """
     Internal options class for SeePlaces service.
@@ -19,14 +20,6 @@ class SeePlacesOptions:
     base_url: str
     api_version: str
     scope_id: str
-
-    def __init__(self) -> None:
-        try:
-            self.base_url = os.environ["BASE_URL"]
-            self.api_version = os.environ["API_VERSION"]
-            self.scope_id = os.environ["SCOPE_ID"]
-        except KeyError as exc:
-            raise ConfigurationError(f"Missing configuration key: {exc}") from exc
 
 
 class _SpokenLanguage:
