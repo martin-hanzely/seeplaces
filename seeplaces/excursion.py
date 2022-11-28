@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class ExcursionDuration:
+class _ExcursionDuration:
     """
     Excursion duration settings.
     """
@@ -44,7 +44,7 @@ class SeePlacesExcursion:
     currency: str
     included_in_price: list[str]
 
-    _duration: ExcursionDuration
+    _duration: _ExcursionDuration
 
     def __init__(
         self,
@@ -71,7 +71,7 @@ class SeePlacesExcursion:
         self.description = Description
         self.currency = Currency
         self.included_in_price = IncludedInPrice
-        self._duration = ExcursionDuration(
+        self._duration = _ExcursionDuration(
             is_all_day=IsAllDay,
             is_many_days=IsManyDays,
             duration_hours=DurationHours,
