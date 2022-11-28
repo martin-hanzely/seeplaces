@@ -49,17 +49,17 @@ class SeePlacesExcursion:
     def __init__(
         self,
         *,  # Require keyword arguments.
-        Name,
-        FinalPrice,
-        PhotoPath,
-        Description,
-        Currency,
-        IncludedInPrice,
-        IsAllDay,
-        IsManyDays,
-        DurationHours,
-        DurationDays,
-        HideDuration,
+        Name: str,
+        FinalPrice: float,
+        PhotoPath: str,
+        Description: str,
+        Currency: str,
+        IncludedInPrice: list[str],
+        IsAllDay: bool,
+        IsManyDays: bool,
+        DurationHours: float,
+        DurationDays: float,
+        HideDuration: bool,
         **_,  # Discard unused input.
     ) -> None:
         """

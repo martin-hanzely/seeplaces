@@ -27,6 +27,9 @@ class TestSeePlacesService:
 
     @pytest.fixture
     def service(self, setup_env, options) -> SeePlacesService:
+        """
+        Dummy service with test values.
+        """
         return SeePlacesService(options=options)
 
     def test__get_language_ids(self, monkeypatch, service):

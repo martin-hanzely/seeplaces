@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 import requests
 
 from seeplaces.exceptions import ApiConnectionError
+from seeplaces.excursion import SeePlacesExcursion
 
 
 _mapping = dict[str, Any]
@@ -44,6 +45,32 @@ class SeePlacesService:
     def __init__(self, options: SeePlacesOptions) -> None:
         self._options = options
 
+    def get_excursions(
+        self,
+        iata_code: str,
+        date_from: datetime.date,
+        date_to: datetime.date,
+        languages: set[str],
+    ) -> list[SeePlacesExcursion]:
+        """
+        Returns list of SeePlacesExcursion objects from api.
+        """
+        language_ids = self._get_language_ids(languages=languages)
+        api_response = self._call_excursion_for_iata_code(
+            iata_code=iata_code,
+            date_from=date_from,
+            date_to=date_to,
+            language_ids=language_ids,
+        )
+        json_data: dict[str, Any] = api_response.json()
+
+        excursions = []
+        # Assuming Items is iterable.
+        if excursions_from_response := json_data.get("Items"):
+            for _e in excursions_from_response:
+                excursions.append(SeePlacesExcursion(**_e))
+        return excursions
+
     def _get_language_ids(self, languages: set[str]) -> set[str]:
         """
         Returns IDs of given languages.
@@ -59,6 +86,7 @@ class SeePlacesService:
         json_data: dict[str, Any] = response.json()
 
         languages = []
+        # Assuming SpokenLanguages is iterable.
         if languages_from_response := json_data.get("SpokenLanguages"):
             for _l in languages_from_response:
                 languages.append(_SpokenLanguage(**_l))

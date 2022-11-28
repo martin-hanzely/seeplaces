@@ -1,15 +1,41 @@
 import datetime
 
-from seeplaces.service import SeePlacesOptions, SeePlacesService
+import pytest
+
+from seeplaces.excursion import SeePlacesExcursion
+from seeplaces.service import SeePlacesService
 
 
 class TestIntegration:
 
-    def test__excursion_spoken_languages(self, options):
+    @pytest.fixture
+    def service(self, options) -> SeePlacesService:
+        """
+        Service with real values for integration tests.
+        """
+        return SeePlacesService(options=options)    
+
+    def test_get_excursions(self, service):
+        """
+        Check if ExcursionForIataCode response is parsed into SeePlacesExcursion objects.
+        """
+        _today = datetime.date.today()
+        excursions = service.get_excursions(
+            iata_code="AYT",
+            date_from=_today,
+            date_to=_today + datetime.timedelta(days=7),
+            languages={"Slovak"},
+        )
+
+        # Assume some excursions are always returned.
+        assert len(excursions) > 0, "No excursions found"
+        for excursion in excursions:
+            assert isinstance(excursion, SeePlacesExcursion), "Wrong return type."
+
+    def test__excursion_spoken_languages(self, service):
         """
         Check if ExcursionSpokenLanguages api response has expected format.
         """
-        service = SeePlacesService(options=options)
         api_response = service._call_excursion_spoken_languages()
         all_languages = service._parse_languages_from_response(api_response)
         assert len(all_languages) > 0, "No languages found."
@@ -22,12 +48,10 @@ class TestIntegration:
                 found_slovak = True
         assert found_slovak, "Slovak language not found."
 
-    def test__call_excursion_for_iata_code(self, options):
+    def test__call_excursion_for_iata_code(self, service):
         """
         Check if ExcursionForIataCode api response has expected format.
         """
-        service = SeePlacesService(options=options)
-
         language_ids = service._get_language_ids({"Slovak"})
         assert len(language_ids) > 0, "No languages found."
 
