@@ -8,9 +8,6 @@ import requests
 from seeplaces.service import _SpokenLanguage, SeePlacesService
 
 
-_test_base_url = "https://www.example.com/"
-
-
 @pytest.fixture()
 def setup_env() -> Iterator[None]:
     """
@@ -18,7 +15,7 @@ def setup_env() -> Iterator[None]:
     """
     # Only use in unit tests. Integration needs real values.
     required_env = {
-        "BASE_URL": _test_base_url,  # Must end with trailing slash.
+        "BASE_URL": "https://www.example.com/",  # Must end with trailing slash.
         "API_VERSION": "1.0",
         "SCOPE_ID": "123456",
     }
