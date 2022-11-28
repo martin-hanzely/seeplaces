@@ -1,5 +1,7 @@
 # seeplaces
 
+Python wrapper for [seeplaces.com](https://seeplaces.com/) excursion api.
+
 ## Quick start
 
 1. Create `SeePlacesOptions` instance:
