@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 from urllib.parse import urljoin
 
 import requests
@@ -9,8 +9,22 @@ from seeplaces.exceptions import ApiConnectionError
 from seeplaces.excursion import SeePlacesExcursion
 
 
+LANGUAGES_CACHE_TTL = 60 * 60 * 24  # 24 hours.
+EXCURSIONS_CACHE_TTL = 60 * 60  # 1 hour.
+
+
 _mapping = dict[str, Any]
 """Type alias for mappings, eg. query and headers."""
+
+
+class CacheProtocol(Protocol):
+    """
+    Generic cache protocol designed to be used with Django cache API.
+    See: https://docs.djangoproject.com/en/3.2/topics/cache/#the-low-level-cache-api.
+    """
+    def get(self, key: str, default: Any | None = None, version: Any = None) -> Any: ...
+    def set(self, key: str, value: Any, timeout: int = 0, version: Any = None) -> None: ...
+    """Generic integer placeholder used as DEFAULT_TIMEOUT."""
 
 
 @dataclass
@@ -41,21 +55,43 @@ class SeePlacesService:
     Connection service for SeePlaces API.
     """
     _options: SeePlacesOptions
+    _cache: CacheProtocol | None
+    _cache_prefix: str
 
-    def __init__(self, options: SeePlacesOptions) -> None:
+    def __init__(
+            self,
+            options: SeePlacesOptions,
+            cache: CacheProtocol | None = None,
+            cache_prefix: str | None = None,
+    ) -> None:
         self._options = options
+        self._cache = cache
+
+        # Do not use "argument or default" as empty prefix should be allowed.
+        if cache_prefix is None:
+            cache_prefix = "seeplaces"  # Default cache prefix.
+        self._cache_prefix = cache_prefix
 
     def get_excursions(
         self,
         iata_code: str,
         date_from: datetime.date,
         date_to: datetime.date,
-        languages: set[str],
+        spoken_languages: list[str],
     ) -> list[SeePlacesExcursion]:
         """
         Returns list of SeePlacesExcursion objects from api.
         """
-        language_ids = self._get_language_ids(languages=languages)
+        # Search for result in cache.
+        cache = self._cache
+        cache_key = self._excursions_cache_key(iata_code, date_from, spoken_languages)
+        if cache is not None:
+            cached_result = cache.get(cache_key)
+            if cached_result is not None:
+                return cached_result
+
+        # Get result from API.
+        language_ids = self._get_language_ids(spoken_languages=spoken_languages)
         api_response = self._call_excursion_for_iata_code(
             iata_code=iata_code,
             date_from=date_from,
@@ -69,15 +105,54 @@ class SeePlacesService:
         if excursions_from_response := json_data.get("Items"):
             for _e in excursions_from_response:
                 excursions.append(SeePlacesExcursion(**_e))
+
+        # Save result to cache.
+        if cache is not None:
+            cache.set(cache_key, excursions, timeout=EXCURSIONS_CACHE_TTL)
+
         return excursions
 
-    def _get_language_ids(self, languages: set[str]) -> set[str]:
+    def _get_language_ids(self, spoken_languages: list[str]) -> set[str]:
         """
-        Returns IDs of given languages.
+        Returns IDs of given languages. Tries to hit cache first. Saves result to cache.
         """
+        # Search for result in cache.
+        cache = self._cache
+        cache_key = self._languages_cache_key(spoken_languages)
+        if cache is not None:
+            cached_result = cache.get(cache_key)
+            if cached_result is not None:
+                return cached_result
+
+        # Get result from API.
         api_response = self._call_excursion_spoken_languages()
         all_languages = self._parse_languages_from_response(api_response)
-        return {_l.id for _l in all_languages if _l.name in languages}
+        language_ids = {_l.id for _l in all_languages if _l.name in spoken_languages}
+
+        # Save result to cache.
+        if cache is not None:
+            cache.set(cache_key, language_ids, timeout=LANGUAGES_CACHE_TTL)
+
+        return language_ids
+
+    def _excursions_cache_key(
+        self,
+        iata_code: str,
+        date_from: datetime.date,
+        spoken_languages: list[str],
+    ) -> str:
+        """
+        Returns cache key for excursions.
+        """
+        lang_code = "".join(_l[:3] for _l in spoken_languages)
+        return f"{self._cache_prefix}_exc_{iata_code}_{date_from.month}_{lang_code}"
+
+    def _languages_cache_key(self, spoken_languages: list[str]) -> str:
+        """
+        Returns cache key for languages.
+        """
+        code = "".join(_l[:3] for _l in spoken_languages)
+        return f"{self._cache_prefix}_lang_{code}"
 
     def _parse_languages_from_response(self, response: requests.Response) -> list[_SpokenLanguage]:
         """

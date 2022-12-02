@@ -1,3 +1,4 @@
+import datetime
 import os
 from collections.abc import Iterator
 from unittest import mock
@@ -40,9 +41,25 @@ class TestSeePlacesService:
         ]
         monkeypatch.setattr(service, "_call_excursion_spoken_languages", lambda: None)
         monkeypatch.setattr(service, "_parse_languages_from_response", lambda _: languages)
-        language_ids = service._get_language_ids({"Slovak"})
+        language_ids = service._get_language_ids(["Slovak"])
         assert len(language_ids) == 1
         assert language_ids.pop() == test_id
+
+    def test__excursions_cache_key(self, service):
+        key = service._excursions_cache_key("BTS", datetime.date(2023, 1, 1), ["Slovak", "Czech"])
+        assert key == "seeplaces_exc_BTS_1_SloCze"
+
+    @pytest.mark.parametrize(
+        "languages, expected_output",
+        [
+            ([], "seeplaces_lang_"),
+            (["Slovak"], "seeplaces_lang_Slo"),
+            (["Slovak", "Czech"], "seeplaces_lang_SloCze"),
+        ]
+    )
+    def test__languages_cache_key(self, service, languages, expected_output):
+        assert service._languages_cache_key(languages) == expected_output
+
 
     @pytest.mark.parametrize(
         "json_data, expected_output",

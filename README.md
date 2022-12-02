@@ -29,6 +29,6 @@ Python wrapper for [seeplaces.com](https://seeplaces.com/) excursion api.
         iata_code="BTS",
         date_from=datetime.date(2023, 1, 1),
         date_to=datetime.date(2023, 12, 31),
-        languages={"Slovak"},
+        languages=["Slovak"],
     )
     ```

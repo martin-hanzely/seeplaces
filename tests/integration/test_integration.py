@@ -24,7 +24,7 @@ class TestIntegration:
             iata_code="AYT",
             date_from=_today,
             date_to=_today + datetime.timedelta(days=7),
-            languages={"Slovak"},
+            spoken_languages=["Slovak"],
         )
 
         # Assume some excursions are always returned.
@@ -52,7 +52,7 @@ class TestIntegration:
         """
         Check if ExcursionForIataCode api response has expected format.
         """
-        language_ids = service._get_language_ids({"Slovak"})
+        language_ids = service._get_language_ids(["Slovak"])
         assert len(language_ids) > 0, "No languages found."
 
         _today = datetime.date.today()
