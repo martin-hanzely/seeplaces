@@ -14,11 +14,12 @@ Python wrapper for [seeplaces.com](https://seeplaces.com/) excursion api.
         scope_id="123456",
     )
     ```
-1. Create `SeePlacesService` instance:
+1. Create `SeePlacesService` instance (optionally with cache framework):
     ```python
-    from seeplaces.service import SeePlacesService
+   from django.core.cache import cache
+   from seeplaces.service import SeePlacesService
 
-    service = SeePlacesService(options=options)
+    service = SeePlacesService(options=options, cache=cache)
     ```
 1. Get `list` of `SeePlacesExcursion` instances:
     ```python

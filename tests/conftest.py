@@ -1,8 +1,33 @@
 import os
+from typing import Any
 
 import pytest
 
 from seeplaces.service import SeePlacesOptions
+
+
+class Cache:
+    """
+    Dummy class to mimic cache behavior.
+    """
+    _cache: dict[str, Any]
+
+    def __init__(self):
+        self._cache = dict()
+
+    def get(self, key: str, *args, **kwargs) -> Any:
+        return self._cache.get(key)
+
+    def set(self, key: str, value: Any, *args, **kwargs) -> None:
+        self._cache[key] = value
+
+
+@pytest.fixture
+def cache() -> Cache:
+    """
+    Dummy cache.
+    """
+    return Cache()
 
 
 @pytest.fixture

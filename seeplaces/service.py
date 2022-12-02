@@ -83,12 +83,9 @@ class SeePlacesService:
         Returns list of SeePlacesExcursion objects from api.
         """
         # Search for result in cache.
-        cache = self._cache
         cache_key = self._excursions_cache_key(iata_code, date_from, spoken_languages)
-        if cache is not None:
-            cached_result = cache.get(cache_key)
-            if cached_result is not None:
-                return cached_result
+        if (cache := self._cache) and (cached_result := cache.get(cache_key)):
+            return cached_result
 
         # Get result from API.
         language_ids = self._get_language_ids(spoken_languages=spoken_languages)
@@ -117,12 +114,9 @@ class SeePlacesService:
         Returns IDs of given languages. Tries to hit cache first. Saves result to cache.
         """
         # Search for result in cache.
-        cache = self._cache
         cache_key = self._languages_cache_key(spoken_languages)
-        if cache is not None:
-            cached_result = cache.get(cache_key)
-            if cached_result is not None:
-                return cached_result
+        if (cache := self._cache) and (cached_result := cache.get(cache_key)):
+            return cached_result
 
         # Get result from API.
         api_response = self._call_excursion_spoken_languages()

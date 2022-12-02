@@ -9,11 +9,11 @@ from seeplaces.service import SeePlacesService
 class TestIntegration:
 
     @pytest.fixture
-    def service(self, options) -> SeePlacesService:
+    def service(self, options, cache) -> SeePlacesService:
         """
         Service with real values for integration tests.
         """
-        return SeePlacesService(options=options)    
+        return SeePlacesService(options=options, cache=cache)
 
     def test_get_excursions(self, service):
         """
@@ -31,6 +31,27 @@ class TestIntegration:
         assert len(excursions) > 0, "No excursions found"
         for excursion in excursions:
             assert isinstance(excursion, SeePlacesExcursion), "Wrong return type."
+
+    def test_get_excursions__from_cache(self, cache, service):
+        """
+        Check if method tries to hit cache first before calling api.
+        """
+        _today = datetime.date.today()
+        iata_code = "AYT"
+        date_from = _today
+        spoken_languages = ["Slovak"]
+
+        cached_value = "cached_value"
+        cache_key = service._excursions_cache_key(iata_code, date_from, spoken_languages)
+        cache.set(cache_key, cached_value)
+
+        excursions = service.get_excursions(
+            iata_code=iata_code,
+            date_from=date_from,
+            date_to=_today + datetime.timedelta(days=7),
+            spoken_languages=spoken_languages,
+        )
+        assert excursions == cached_value
 
     def test__excursion_spoken_languages(self, service):
         """

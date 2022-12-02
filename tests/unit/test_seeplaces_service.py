@@ -27,13 +27,16 @@ def setup_env() -> Iterator[None]:
 class TestSeePlacesService:
 
     @pytest.fixture
-    def service(self, setup_env, options) -> SeePlacesService:
+    def service(self, cache, setup_env, options) -> SeePlacesService:
         """
         Dummy service with test values.
         """
-        return SeePlacesService(options=options)
+        return SeePlacesService(options=options, cache=cache)
 
     def test__get_language_ids(self, monkeypatch, service):
+        # Disable cache.
+        service._cache = None
+
         test_id = "test_id"
         languages = [
             _SpokenLanguage(Id=test_id, Name="Slovak"),
@@ -44,6 +47,11 @@ class TestSeePlacesService:
         language_ids = service._get_language_ids(["Slovak"])
         assert len(language_ids) == 1
         assert language_ids.pop() == test_id
+
+    def test__get_language_ids__from_cache(self, monkeypatch, cache, service):
+        cached_value = "cached_value"
+        cache.set(service._languages_cache_key(["Slovak"]), cached_value)
+        assert cached_value == service._get_language_ids(["Slovak"])
 
     def test__excursions_cache_key(self, service):
         key = service._excursions_cache_key("BTS", datetime.date(2023, 1, 1), ["Slovak", "Czech"])
@@ -59,7 +67,6 @@ class TestSeePlacesService:
     )
     def test__languages_cache_key(self, service, languages, expected_output):
         assert service._languages_cache_key(languages) == expected_output
-
 
     @pytest.mark.parametrize(
         "json_data, expected_output",
